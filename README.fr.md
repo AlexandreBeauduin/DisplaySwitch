@@ -14,7 +14,7 @@ déconnecter des écrans — **y compris un iPad utilisé en Sidecar** — sans 
 
 ## Fonctionnalités
 
-![Menu de DisplaySwitch](docs/images/menu-fr.png)
+![Menu de DisplaySwitch](docs/images/menu.png)
 
 - Liste des écrans et des iPad Sidecar, mise à jour automatiquement.
 - Connexion / déconnexion de chacun depuis le menu.

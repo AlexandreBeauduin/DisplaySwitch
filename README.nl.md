@@ -14,6 +14,8 @@ iPad die als Sidecar-scherm wordt gebruikt** — zonder een kabel uit te trekken
 
 ## Functies
 
+![Menu van DisplaySwitch](docs/images/menu.png)
+
 - Toont schermen en Sidecar-iPads, automatisch bijgewerkt.
 - Verbind / koppel elk scherm los vanuit het menu.
 - **Alles behalve het hoofdscherm** loskoppelen (iPads inbegrepen) / **Alles opnieuw verbinden**.

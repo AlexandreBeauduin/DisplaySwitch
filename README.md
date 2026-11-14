@@ -14,6 +14,8 @@ used as a Sidecar display** — without unplugging any cable.
 
 ## Features
 
+![DisplaySwitch menu](docs/images/menu.png)
+
 - Lists displays and Sidecar iPads, refreshed automatically.
 - Connect / disconnect each one from the menu.
 - **Disconnect all but the main display** (iPads included) / **Reconnect all**.

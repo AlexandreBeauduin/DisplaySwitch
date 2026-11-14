@@ -14,6 +14,8 @@ Eine kleine macOS-Menüleisten-App (plus CLI), um Bildschirme zu verbinden / zu 
 
 ## Funktionen
 
+![Menü von DisplaySwitch](docs/images/menu.png)
+
 - Listet Bildschirme und Sidecar-iPads auf, automatisch aktualisiert.
 - Jeden einzeln über das Menü verbinden / trennen.
 - **Alles außer Hauptbildschirm** trennen (iPads inklusive) / **Alle wieder verbinden**.
