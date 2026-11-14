@@ -1,6 +1,6 @@
 # How it works
 
-[Français](../fr/FONCTIONNEMENT.md)
+**English** · [Français](../fr/FONCTIONNEMENT.md) · [Nederlands](../nl/HOE-HET-WERKT.md) · [Deutsch](../de/FUNKTIONSWEISE.md)
 
 ## Physical displays (HDMI / DisplayPort / USB-C)
 

@@ -55,10 +55,24 @@ final class DisplayModel: ObservableObject {
         didSet { UserDefaults.standard.set(reconnectOnQuit, forKey: "reconnectOnQuit") }
     }
 
+    /// "" = follow the system, otherwise a Language raw value.
+    @Published var languageChoice: String = UserDefaults.standard.string(forKey: "language") ?? "" {
+        didSet {
+            UserDefaults.standard.set(languageChoice, forKey: "language")
+            Self.applyLanguage(languageChoice)
+            refresh() // display names stored with a localized fallback
+        }
+    }
+
+    static func applyLanguage(_ choice: String) {
+        L10n.language = Language(rawValue: choice) ?? Language.preferred(from: Locale.preferredLanguages)
+    }
+
     private var pendingRefresh: DispatchWorkItem?
     private var pollTimer: Timer?
 
     func start() {
+        Self.applyLanguage(languageChoice)
         refresh()
         // Notified by macOS on every display change (cable, sleep/wake, Sidecar, our own toggles).
         CGDisplayRegisterReconfigurationCallback({ _, flags, _ in
@@ -143,7 +157,7 @@ final class DisplayModel: ObservableObject {
             if enabled { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
             lastError = nil
         } catch {
-            lastError = "Lancement au démarrage : \(error.localizedDescription)"
+            lastError = L10n.launchAtLoginError(error.localizedDescription)
         }
         refresh()
     }
@@ -155,7 +169,7 @@ struct MenuContent: View {
     @ObservedObject var model: DisplayModel
 
     var body: some View {
-        Section("Écrans") {
+        Section(L10n.displays) {
             ForEach(model.displays) { display in
                 Toggle(isOn: Binding(get: { display.isActive }, set: { _ in model.toggle(display) })) {
                     Text(label(for: display))
@@ -177,10 +191,10 @@ struct MenuContent: View {
 
         Divider()
 
-        Button("Tout sauf l'écran principal") { model.disconnectAllButMain() }
+        Button(L10n.allButMain) { model.disconnectAllButMain() }
             .disabled(model.busy || (model.displays.allSatisfy { !$0.isActive || $0.isMain }
                                      && model.sidecars.allSatisfy { !$0.isConnected }))
-        Button(model.busy ? "En cours…" : "Tout reconnecter") { model.reconnectAll() }
+        Button(model.busy ? L10n.working : L10n.reconnectAll) { model.reconnectAll() }
             .keyboardShortcut("r")
             .disabled(model.busy)
 
@@ -191,25 +205,30 @@ struct MenuContent: View {
 
         Divider()
 
-        Toggle("Lancer au démarrage", isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
-        Toggle("Tout reconnecter en quittant", isOn: $model.reconnectOnQuit)
+        Toggle(L10n.launchAtLogin, isOn: Binding(get: { model.launchAtLogin }, set: { model.setLaunchAtLogin($0) }))
+        Toggle(L10n.reconnectOnQuit, isOn: $model.reconnectOnQuit)
+
+        Picker(L10n.languageMenu, selection: $model.languageChoice) {
+            Text(L10n.systemLanguage).tag("")
+            ForEach(Language.allCases, id: \.rawValue) { Text($0.nativeName).tag($0.rawValue) }
+        }
 
         Divider()
 
-        Button("Quitter DisplaySwitch") { NSApplication.shared.terminate(nil) }
+        Button(L10n.quit) { NSApplication.shared.terminate(nil) }
             .keyboardShortcut("q")
     }
 
     private func label(for display: DisplayStatus) -> String {
         var tags: [String] = []
-        if display.isMain { tags.append("principal") }
-        if display.isBuiltin { tags.append("intégré, protégé") }
+        if display.isMain { tags.append(L10n.main) }
+        if display.isBuiltin { tags.append(L10n.builtinProtectedTag) }
         return tags.isEmpty ? display.name : "\(display.name) — \(tags.joined(separator: ", "))"
     }
 
     private func label(for device: SidecarStatus) -> String {
-        if model.pendingSidecars.contains(device.id) { return "\(device.name) — en cours…" }
-        if !device.isAvailable { return "\(device.name) — hors de portée" }
+        if model.pendingSidecars.contains(device.id) { return "\(device.name) — \(L10n.inProgress)" }
+        if !device.isAvailable { return "\(device.name) — \(L10n.outOfRange)" }
         return device.name
     }
 }

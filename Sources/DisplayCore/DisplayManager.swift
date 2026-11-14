@@ -12,12 +12,12 @@ public enum DisplayError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .apiUnavailable(let name): return "API privée introuvable : \(name) (macOS a peut-être changé)"
-        case .cgError(let err): return "CoreGraphics a renvoyé l'erreur \(err.rawValue)"
-        case .lastActiveDisplay: return "Refusé : ce serait le dernier écran physique actif"
-        case .builtinProtected: return "Refusé : l'écran intégré est protégé (utilise --force pour passer outre)"
-        case .unknownDisplay(let id): return "Écran inconnu : \(id)"
-        case .airPlayDisplay: return "Écran AirPlay/Sidecar : utilise les commandes sidecar"
+        case .apiUnavailable(let name): return L10n.apiUnavailable(name)
+        case .cgError(let err): return L10n.cgError(err.rawValue)
+        case .lastActiveDisplay: return L10n.lastActiveDisplay
+        case .builtinProtected: return L10n.builtinProtected
+        case .unknownDisplay(let id): return L10n.unknownDisplay(id)
+        case .airPlayDisplay: return L10n.airPlayDisplay
         }
     }
 }
@@ -76,7 +76,7 @@ public final class DisplayManager {
         }
         for id in active where !system.isAirPlay(id) {
             let builtin = system.isBuiltin(id)
-            let fallback = store.displays[id]?.name ?? (builtin ? "Écran intégré" : "Écran \(id)")
+            let fallback = store.displays[id]?.name ?? (builtin ? L10n.builtinDisplay : L10n.display(id))
             store.remember(id: id, name: system.name(of: id) ?? fallback, uuid: system.uuid(of: id), isBuiltin: builtin)
             // Reconnected outside of DisplaySwitch (cable, other tool): clear our flag.
             store.setDisconnectedByUs(id, false)

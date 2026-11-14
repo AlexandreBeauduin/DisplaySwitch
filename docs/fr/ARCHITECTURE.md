@@ -1,6 +1,6 @@
 # Architecture
 
-[English](../en/ARCHITECTURE.md)
+[English](../en/ARCHITECTURE.md) · **Français** · [Nederlands](../nl/ARCHITECTUUR.md) · [Deutsch](../de/ARCHITEKTUR.md)
 
 ```
 Package.swift (SwiftPM, macOS 14+, outils Swift 6 / mode de langage v5)
@@ -11,6 +11,7 @@ Sources/
     SidecarManager.swift  wrapper SidecarCore (devices, connect, disconnect)
     DisplayStore.swift    persistance JSON (écrans + iPad, drapeau disconnectedByUs)
     DisplayManager.swift  état fusionné, garde-fous, actions unitaires et groupées
+    Localization.swift    enum Language + L10n : tous les textes affichés (en, fr, nl, de)
   DisplaySwitch/          app barre des menus (SwiftUI MenuBarExtra, LSUIElement)
   displayctl/             CLI
 Tests/DisplayCoreTests/   tests unitaires (swift-testing) avec faux écrans / faux Sidecar
@@ -48,6 +49,14 @@ L'ancien format (tableau nu d'écrans) est encore lu.
 
 `SMAppService.mainApp` — fiable seulement si l'app est dans `/Applications`
 (`scripts/build-app.sh --install`).
+
+## Traductions
+
+Tous les textes affichés (menu, erreurs, CLI) sont dans `Sources/DisplayCore/Localization.swift`,
+un appel `t(en:fr:nl:de:)` par texte : une traduction manquante est une erreur de compilation.
+La langue est la première prise en charge dans `Locale.preferredLanguages` (anglais par défaut),
+remplacée par le menu *Langue* de l'app (clé `UserDefaults` `language`) ou, pour la CLI, par
+`DISPLAYSWITCH_LANG`. Ajouter une langue : un cas à `Language` et une colonne à chaque `t(...)`.
 
 ## Tests
 

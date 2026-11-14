@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml)
 
-[English](README.md) · **Français**
+[English](README.md) · **Français** · [Nederlands](README.nl.md) · [Deutsch](README.de.md)
 
 Petite app de barre des menus macOS (et outil en ligne de commande) pour connecter /
 déconnecter des écrans — **y compris un iPad utilisé en Sidecar** — sans débrancher de câble.
@@ -14,11 +14,15 @@ déconnecter des écrans — **y compris un iPad utilisé en Sidecar** — sans 
 
 ## Fonctionnalités
 
+![Menu de DisplaySwitch](docs/images/menu-fr.png)
+
 - Liste des écrans et des iPad Sidecar, mise à jour automatiquement.
 - Connexion / déconnexion de chacun depuis le menu.
 - **Tout sauf l'écran principal** (iPad compris) / **Tout reconnecter**.
 - Mémoire de ce qui a été coupé (un écran coupé disparaît des listes de macOS).
 - Lancement au démarrage.
+- Interface en **anglais, français, néerlandais et allemand** : suit la langue de macOS, ou
+  se choisit dans le menu (*Langue*).
 - Garde-fous : jamais le dernier écran physique, écran intégré protégé, tout est
   reconnecté en quittant (par défaut).
 
@@ -50,6 +54,8 @@ build/displayctl only-main                # tout sauf l'écran principal (iPad c
 build/displayctl detect                   # demande à macOS de redétecter les écrans
 build/displayctl debug
 ```
+
+La CLI suit la langue de macOS ; pour en forcer une : `DISPLAYSWITCH_LANG=en|fr|nl|de`.
 
 ## Fonctionnement (en bref)
 

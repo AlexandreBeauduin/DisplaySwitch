@@ -21,11 +21,11 @@ cp "$BIN/displayctl" build/displayctl
 codesign --force --sign - "$APP"
 codesign --force --sign - build/displayctl
 
-echo "OK: $APP et build/displayctl ($(lipo -archs build/displayctl))"
+echo "OK: $APP and build/displayctl ($(lipo -archs build/displayctl))"
 
 if [[ "${1:-}" == "--install" ]]; then
   pkill -x DisplaySwitch 2>/dev/null || true
   rm -rf /Applications/DisplaySwitch.app
   cp -R "$APP" /Applications/
-  echo "Installé dans /Applications/DisplaySwitch.app"
+  echo "Installed in /Applications/DisplaySwitch.app"
 fi

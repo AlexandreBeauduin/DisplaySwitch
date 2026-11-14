@@ -1,6 +1,6 @@
 # Fonctionnement
 
-[English](../en/HOW-IT-WORKS.md)
+[English](../en/HOW-IT-WORKS.md) · **Français** · [Nederlands](../nl/HOE-HET-WERKT.md) · [Deutsch](../de/FUNKTIONSWEISE.md)
 
 ## Écrans physiques (HDMI / DisplayPort / USB-C)
 

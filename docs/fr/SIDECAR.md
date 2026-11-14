@@ -1,6 +1,6 @@
 # Sidecar (iPad) — API SidecarCore
 
-[English](../en/SIDECAR.md)
+[English](../en/SIDECAR.md) · **Français** · [Nederlands](../nl/SIDECAR.md) · [Deutsch](../de/SIDECAR.md)
 
 ## Problème
 

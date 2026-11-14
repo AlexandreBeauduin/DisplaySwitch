@@ -2,35 +2,18 @@ import CoreGraphics
 import DisplayCore
 import Foundation
 
-let usage = """
-displayctl — connecter / déconnecter des écrans et des iPad Sidecar
-
-Écrans physiques
-  displayctl list                    liste écrans + appareils Sidecar
-  displayctl off <id> [--force]      déconnecte un écran (--force : autorise l'écran intégré)
-  displayctl on <id>                 reconnecte un écran
-
-Sidecar (iPad)
-  displayctl sidecar off [nom|uuid]  déconnecte l'iPad (le seul connecté si omis)
-  displayctl sidecar on  [nom|uuid]  connecte l'iPad (le seul disponible si omis)
-
-Global
-  displayctl on-all                  reconnecte tout ce que DisplaySwitch a coupé
-  displayctl only-main               déconnecte tout sauf l'écran principal (iPad compris)
-  displayctl detect                  demande à macOS de redétecter les écrans
-  displayctl debug                   listes brutes
-"""
+let usage = L10n.usage
 
 let args = Array(CommandLine.arguments.dropFirst())
 let manager = DisplayManager()
 
 func fail(_ message: String) -> Never {
-    FileHandle.standardError.write(Data("Erreur : \(message)\n".utf8))
+    FileHandle.standardError.write(Data((L10n.error(message) + "\n").utf8))
     exit(1)
 }
 
 func parseID(_ index: Int) -> CGDirectDisplayID {
-    guard args.count > index, let id = CGDirectDisplayID(args[index]) else { fail("id d'écran manquant ou invalide\n\n\(usage)") }
+    guard args.count > index, let id = CGDirectDisplayID(args[index]) else { fail("\(L10n.invalidID)\n\n\(usage)") }
     return id
 }
 
@@ -39,27 +22,27 @@ func pad(_ s: String, _ n: Int) -> String { s.padding(toLength: max(n, s.count +
 func printList() {
     _ = SidecarManager.shared.waitForDevices()
     let rows = manager.refresh()
-    print("ÉCRANS")
-    print(pad("ID", 12) + pad("ÉTAT", 14) + "NOM")
+    print(L10n.displaysHeader)
+    print(pad("ID", 12) + pad(L10n.stateHeader, 14) + L10n.nameHeader)
     for d in rows {
         var tags: [String] = []
-        if d.isMain { tags.append("principal") }
-        if d.isBuiltin { tags.append("intégré") }
-        if !d.isActive && d.disconnectedByUs { tags.append("coupé par DisplaySwitch") }
+        if d.isMain { tags.append(L10n.main) }
+        if d.isBuiltin { tags.append(L10n.builtin) }
+        if !d.isActive && d.disconnectedByUs { tags.append(L10n.disconnectedByUs) }
         let suffix = tags.isEmpty ? "" : "  (\(tags.joined(separator: ", ")))"
-        print(pad(String(d.id), 12) + pad(d.isActive ? "connecté" : "déconnecté", 14) + d.name + suffix)
+        print(pad(String(d.id), 12) + pad(d.isActive ? L10n.connected : L10n.disconnected, 14) + d.name + suffix)
     }
     let sidecars = manager.sidecarStatuses()
-    print("\nSIDECAR" + (SidecarManager.shared.isSupported ? "" : " (indisponible)"))
-    if sidecars.isEmpty { print("  aucun iPad à portée") }
+    print("\nSIDECAR" + (SidecarManager.shared.isSupported ? "" : " (\(L10n.unavailable))"))
+    if sidecars.isEmpty { print("  " + L10n.noIPadInRange) }
     for s in sidecars {
-        let state = !s.isAvailable ? "hors portée" : (s.isConnected ? "connecté" : "déconnecté")
+        let state = !s.isAvailable ? L10n.outOfRange : (s.isConnected ? L10n.connected : L10n.disconnected)
         print(pad(String(s.id.prefix(8)) + "…", 12) + pad(state, 14) + "\(s.name) (\(s.model))")
     }
 }
 
 func report(_ failures: [String: Error]?) {
-    guard let failures else { fail("délai dépassé") }
+    guard let failures else { fail(L10n.timeout) }
     for (name, error) in failures { FileHandle.standardError.write(Data("  \(name) : \(error)\n".utf8)) }
     if !failures.isEmpty { exit(1) }
 }
@@ -74,7 +57,7 @@ func resolveSidecar(connecting: Bool) -> String {
     }
     let candidates = devices.filter { $0.isConnected != connecting }
     guard candidates.count == 1, let device = candidates.first else {
-        fail(candidates.isEmpty ? "aucun iPad \(connecting ? "à connecter" : "connecté")" : "plusieurs iPad : précise le nom ou l'uuid")
+        fail(candidates.isEmpty ? (connecting ? L10n.noIPadToConnect : L10n.noIPadConnected) : L10n.severalIPads)
     }
     return device.id
 }
@@ -84,9 +67,9 @@ case "list", nil:
     printList()
 case "debug":
     let system = SystemDisplays()
-    print("actifs :", system.activeDisplayIDs())
+    print("active :", system.activeDisplayIDs())
     print("online :", system.onlineDisplayIDs())
-    print("CGS    :", system.privateDisplayIDs().map { "\($0)" } ?? "indisponible", "(contient des IDs fantômes)")
+    print("CGS    :", system.privateDisplayIDs().map { "\($0)" } ?? "unavailable", "(contains ghost IDs)")
     print("main   :", system.mainDisplayID())
     print("airplay:", system.activeDisplayIDs().filter(system.isAirPlay))
     print("sidecar:", SidecarManager.shared.waitForDevices())
@@ -104,7 +87,7 @@ case "sidecar":
         connecting ? manager.connectSidecar(id, completion: done) : manager.disconnectSidecar(id, completion: done)
     }
     switch result {
-    case nil: fail("délai dépassé")
+    case nil: fail(L10n.timeout)
     case .some(.some(let error)): fail("\(error)")
     default: break
     }

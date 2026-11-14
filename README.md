@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml)
 
-**English** · [Français](README.fr.md)
+**English** · [Français](README.fr.md) · [Nederlands](README.nl.md) · [Deutsch](README.de.md)
 
 A small macOS menu bar app (and CLI) to connect / disconnect displays — **including an iPad
 used as a Sidecar display** — without unplugging any cable.
@@ -19,6 +19,8 @@ used as a Sidecar display** — without unplugging any cable.
 - **Disconnect all but the main display** (iPads included) / **Reconnect all**.
 - Remembers what it disconnected (a disconnected display disappears from macOS lists).
 - Launch at login.
+- Interface in **English, French, Dutch and German**: follows the macOS language, or pick one
+  in the menu (*Language*).
 - Safety: never disconnects the last physical display, protects the built-in display,
   reconnects everything on quit (default).
 
@@ -50,6 +52,8 @@ build/displayctl only-main                # everything but the main display (iPa
 build/displayctl detect                   # ask macOS to re-detect displays
 build/displayctl debug
 ```
+
+The CLI follows the macOS language; force one with `DISPLAYSWITCH_LANG=en|fr|nl|de`.
 
 ## How it works (short)
 

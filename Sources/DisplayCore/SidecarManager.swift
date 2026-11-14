@@ -17,10 +17,10 @@ public enum SidecarError: Error, CustomStringConvertible {
 
     public var description: String {
         switch self {
-        case .unsupported: return "Sidecar indisponible (SidecarCore introuvable ou Mac non compatible)"
-        case .deviceNotFound(let id): return "Appareil Sidecar introuvable ou hors de portée : \(id)"
-        case .failed(let message): return "Sidecar : \(message)"
-        case .timeout: return "Sidecar : délai dépassé"
+        case .unsupported: return L10n.sidecarUnsupported
+        case .deviceNotFound(let id): return L10n.sidecarNotFound(id)
+        case .failed(let message): return L10n.sidecarFailed(message)
+        case .timeout: return "Sidecar: " + L10n.timeout
         }
     }
 }
