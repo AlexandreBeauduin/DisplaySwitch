@@ -1,5 +1,7 @@
 # DisplaySwitch
 
+[![CI](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml)
+
 **English** · [Français](README.fr.md)
 
 A small macOS menu bar app (and CLI) to connect / disconnect displays — **including an iPad
@@ -22,11 +24,15 @@ used as a Sidecar display** — without unplugging any cable.
 
 ## Install
 
+**Download:** grab `DisplaySwitch-x.y.z.zip` from the
+[Releases](https://github.com/AlexandreBeauduin/DisplaySwitch/releases) page, unzip, move
+`DisplaySwitch.app` to `/Applications`. Universal binary (Apple Silicon + Intel), macOS 14+.
+
+**From source** (Xcode 16 or later):
+
 ```bash
 scripts/build-app.sh --install   # builds and copies DisplaySwitch.app to /Applications
 ```
-
-Requires macOS 14 (Sonoma) or later and the Xcode command line tools.
 
 A downloaded copy is not signed with a Developer ID: macOS blocks it on first launch →
 System Settings › Privacy & Security › **Open Anyway**.
@@ -55,12 +61,26 @@ build/displayctl debug
 Details: [How it works](docs/en/HOW-IT-WORKS.md) · [Sidecar](docs/en/SIDECAR.md) ·
 [Architecture](docs/en/ARCHITECTURE.md)
 
+## Development
+
+```bash
+swift test                 # unit tests (safety rules, state, persistence) — no real display touched
+swift build                # debug build
+scripts/release.sh         # universal build + build/DisplaySwitch-<version>.zip
+```
+
+Releasing: bump `CFBundleShortVersionString` in `Resources/Info.plist`, add a section to
+[CHANGELOG.md](CHANGELOG.md), then push a matching tag (`git tag v1.2.0 && git push origin v1.2.0`):
+GitHub Actions tests, builds and publishes the release.
+
 ## Caveats
 
 - Relies on **private Apple APIs**: a macOS update may break a feature; the app then shows
   an error instead of crashing. Not eligible for the Mac App Store.
 - Last resort if a display stays off: unplug / replug it, or restart the Mac.
 
-## License
+## License & disclaimer
 
-MIT — see [LICENSE](LICENSE).
+MIT — see [LICENSE](LICENSE). Provided **as is, without any warranty**. This project is not
+affiliated with or endorsed by Apple. It changes your display configuration through
+undocumented APIs: use at your own risk.

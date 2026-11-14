@@ -1,12 +1,14 @@
 #!/bin/zsh
 # Build DisplaySwitch.app (menu bar app) and displayctl (CLI) into ./build.
+# Universal binaries (Apple Silicon + Intel).
 # Usage: scripts/build-app.sh [--install]   (--install copies the app to /Applications)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-swift build -c release --product DisplaySwitch
-swift build -c release --product displayctl
-BIN="$(swift build -c release --show-bin-path)"
+ARCHS=(--arch arm64 --arch x86_64)
+swift build -c release "${ARCHS[@]}" --product DisplaySwitch
+swift build -c release "${ARCHS[@]}" --product displayctl
+BIN="$(swift build -c release "${ARCHS[@]}" --show-bin-path)"
 
 APP=build/DisplaySwitch.app
 rm -rf "$APP"
@@ -19,7 +21,7 @@ cp "$BIN/displayctl" build/displayctl
 codesign --force --sign - "$APP"
 codesign --force --sign - build/displayctl
 
-echo "OK: $APP et build/displayctl"
+echo "OK: $APP et build/displayctl ($(lipo -archs build/displayctl))"
 
 if [[ "${1:-}" == "--install" ]]; then
   pkill -x DisplaySwitch 2>/dev/null || true

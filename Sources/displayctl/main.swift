@@ -37,7 +37,7 @@ func parseID(_ index: Int) -> CGDirectDisplayID {
 func pad(_ s: String, _ n: Int) -> String { s.padding(toLength: max(n, s.count + 1), withPad: " ", startingAt: 0) }
 
 func printList() {
-    _ = manager.sidecar.waitForDevices()
+    _ = SidecarManager.shared.waitForDevices()
     let rows = manager.refresh()
     print("ÉCRANS")
     print(pad("ID", 12) + pad("ÉTAT", 14) + "NOM")
@@ -50,7 +50,7 @@ func printList() {
         print(pad(String(d.id), 12) + pad(d.isActive ? "connecté" : "déconnecté", 14) + d.name + suffix)
     }
     let sidecars = manager.sidecarStatuses()
-    print("\nSIDECAR" + (manager.sidecar.isSupported ? "" : " (indisponible)"))
+    print("\nSIDECAR" + (SidecarManager.shared.isSupported ? "" : " (indisponible)"))
     if sidecars.isEmpty { print("  aucun iPad à portée") }
     for s in sidecars {
         let state = !s.isAvailable ? "hors portée" : (s.isConnected ? "connecté" : "déconnecté")
@@ -66,10 +66,10 @@ func report(_ failures: [String: Error]?) {
 
 /// Resolve the target iPad: explicit name/uuid, or the only sensible candidate.
 func resolveSidecar(connecting: Bool) -> String {
-    let devices = manager.sidecar.waitForDevices()
+    let devices = SidecarManager.shared.waitForDevices()
     if args.count > 2 {
         let query = args[2...].joined(separator: " ")
-        guard let device = manager.sidecar.find(query) else { fail(SidecarError.deviceNotFound(query).description) }
+        guard let device = SidecarManager.shared.find(query) else { fail(SidecarError.deviceNotFound(query).description) }
         return device.id
     }
     let candidates = devices.filter { $0.isConnected != connecting }
@@ -83,12 +83,13 @@ switch args.first {
 case "list", nil:
     printList()
 case "debug":
-    print("actifs :", DisplayManager.activeDisplayIDs())
-    print("online :", DisplayManager.onlineDisplayIDs())
-    print("CGS    :", DisplayManager.privateDisplayIDs().map { "\($0)" } ?? "indisponible", "(contient des IDs fantômes)")
-    print("main   :", CGMainDisplayID())
-    print("airplay:", DisplayManager.activeDisplayIDs().filter(DisplayManager.isAirPlay))
-    print("sidecar:", manager.sidecar.waitForDevices())
+    let system = SystemDisplays()
+    print("actifs :", system.activeDisplayIDs())
+    print("online :", system.onlineDisplayIDs())
+    print("CGS    :", system.privateDisplayIDs().map { "\($0)" } ?? "indisponible", "(contient des IDs fantômes)")
+    print("main   :", system.mainDisplayID())
+    print("airplay:", system.activeDisplayIDs().filter(system.isAirPlay))
+    print("sidecar:", SidecarManager.shared.waitForDevices())
 case "off":
     do { try manager.disconnect(parseID(1), allowBuiltin: args.contains("--force")) } catch { fail("\(error)") }
     printList()

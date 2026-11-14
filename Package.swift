@@ -12,6 +12,7 @@ let package = Package(
         .target(name: "DisplayCore"),
         .executableTarget(name: "displayctl", dependencies: ["DisplayCore"]),
         .executableTarget(name: "DisplaySwitch", dependencies: ["DisplayCore"]),
+        .testTarget(name: "DisplayCoreTests", dependencies: ["DisplayCore"]),
     ],
     swiftLanguageModes: [.v5]
 )

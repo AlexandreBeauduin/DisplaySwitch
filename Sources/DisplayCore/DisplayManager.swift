@@ -44,58 +44,20 @@ public struct SidecarStatus: Identifiable, Equatable, Sendable {
 
 public final class DisplayManager {
     public let store: DisplayStore
-    public let sidecar: SidecarManager
+    public let system: DisplaySystem
+    public let sidecar: SidecarControlling
 
-    public init(store: DisplayStore = DisplayStore(), sidecar: SidecarManager = .shared) {
+    public init(store: DisplayStore = DisplayStore(),
+                system: DisplaySystem = SystemDisplays(),
+                sidecar: SidecarControlling = SidecarManager.shared) {
         self.store = store
+        self.system = system
         self.sidecar = sidecar
     }
 
-    // MARK: - Low-level lists
-
-    public static func activeDisplayIDs() -> [CGDirectDisplayID] {
-        list { CGGetActiveDisplayList($0, $1, $2) }
-    }
-
-    public static func onlineDisplayIDs() -> [CGDirectDisplayID] {
-        list { CGGetOnlineDisplayList($0, $1, $2) }
-    }
-
-    /// Private list. Contains stale "ghost" IDs: debugging only, never used for state.
-    public static func privateDisplayIDs() -> [CGDirectDisplayID]? {
-        guard let fn = PrivateAPI.getDisplayList else { return nil }
-        return list { fn($0, $1, $2) }
-    }
-
-    private static func list(_ fetch: (UInt32, UnsafeMutablePointer<CGDirectDisplayID>?, UnsafeMutablePointer<UInt32>?) -> CGError) -> [CGDirectDisplayID] {
-        var ids = [CGDirectDisplayID](repeating: 0, count: 32)
-        var count: UInt32 = 0
-        guard fetch(UInt32(ids.count), &ids, &count) == .success else { return [] }
-        return Array(ids.prefix(Int(count)))
-    }
-
-    // MARK: - Metadata
-
-    /// AirPlay / Sidecar displays report vendor 'aapl' (0x6161706c); Sidecar model is 'iPad'.
-    /// CGSConfigureDisplayEnabled has no effect on them.
-    public static func isAirPlay(_ id: CGDirectDisplayID) -> Bool {
-        CGDisplayVendorNumber(id) == 0x6161_706C
-    }
-
     /// Displays that keep the Mac usable: active, not AirPlay/Sidecar.
-    public static func physicalActiveDisplayIDs() -> [CGDirectDisplayID] {
-        activeDisplayIDs().filter { !isAirPlay($0) }
-    }
-
-    static func name(of id: CGDirectDisplayID) -> String? {
-        NSScreen.screens.first {
-            ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber)?.uint32Value == id
-        }?.localizedName
-    }
-
-    static func uuid(of id: CGDirectDisplayID) -> String? {
-        guard let ref = CGDisplayCreateUUIDFromDisplayID(id)?.takeRetainedValue() else { return nil }
-        return CFUUIDCreateString(nil, ref) as String?
+    public func physicalActiveDisplayIDs() -> [CGDirectDisplayID] {
+        system.activeDisplayIDs().filter { !system.isAirPlay($0) }
     }
 
     // MARK: - State
@@ -105,17 +67,17 @@ public final class DisplayManager {
     @discardableResult
     public func refresh() -> [DisplayStatus] {
         store.load()
-        let active = Set(Self.activeDisplayIDs())
-        let online = Set(Self.onlineDisplayIDs())
-        let main = CGMainDisplayID()
+        let active = Set(system.activeDisplayIDs())
+        let online = Set(system.onlineDisplayIDs())
+        let main = system.mainDisplayID()
 
-        for id in active.union(online) where Self.isAirPlay(id) {
+        for id in active.union(online) where system.isAirPlay(id) {
             store.forget(id)
         }
-        for id in active where !Self.isAirPlay(id) {
-            let builtin = CGDisplayIsBuiltin(id) != 0
+        for id in active where !system.isAirPlay(id) {
+            let builtin = system.isBuiltin(id)
             let fallback = store.displays[id]?.name ?? (builtin ? "Écran intégré" : "Écran \(id)")
-            store.remember(id: id, name: Self.name(of: id) ?? fallback, uuid: Self.uuid(of: id), isBuiltin: builtin)
+            store.remember(id: id, name: system.name(of: id) ?? fallback, uuid: system.uuid(of: id), isBuiltin: builtin)
             // Reconnected outside of DisplaySwitch (cable, other tool): clear our flag.
             store.setDisconnectedByUs(id, false)
         }
@@ -163,49 +125,32 @@ public final class DisplayManager {
 
     // MARK: - Physical display actions (synchronous)
 
-    /// Raw enable/disable, no safety checks.
-    public func setEnabled(_ id: CGDirectDisplayID, _ enabled: Bool) throws {
-        guard let configure = PrivateAPI.configureDisplayEnabled else {
-            throw DisplayError.apiUnavailable("CGSConfigureDisplayEnabled")
-        }
-        var config: CGDisplayConfigRef?
-        let begin = CGBeginDisplayConfiguration(&config)
-        guard begin == .success, let config else { throw DisplayError.cgError(begin) }
-        let result = configure(config, id, enabled)
-        guard result == .success else {
-            CGCancelDisplayConfiguration(config)
-            throw DisplayError.cgError(result)
-        }
-        let complete = CGCompleteDisplayConfiguration(config, .permanently)
-        guard complete == .success else { throw DisplayError.cgError(complete) }
-    }
-
     public func disconnect(_ id: CGDirectDisplayID, allowBuiltin: Bool = false) throws {
         refresh()
-        let active = Self.activeDisplayIDs()
+        let active = system.activeDisplayIDs()
         guard active.contains(id) else {
             if store.displays[id] == nil { throw DisplayError.unknownDisplay(id) }
             return // already inactive
         }
-        if Self.isAirPlay(id) { throw DisplayError.airPlayDisplay }
-        if Self.physicalActiveDisplayIDs().filter({ $0 != id }).isEmpty { throw DisplayError.lastActiveDisplay }
-        if CGDisplayIsBuiltin(id) != 0 && !allowBuiltin { throw DisplayError.builtinProtected }
+        if system.isAirPlay(id) { throw DisplayError.airPlayDisplay }
+        if physicalActiveDisplayIDs().filter({ $0 != id }).isEmpty { throw DisplayError.lastActiveDisplay }
+        if system.isBuiltin(id) && !allowBuiltin { throw DisplayError.builtinProtected }
 
-        try setEnabled(id, false)
+        try system.setEnabled(id, false)
         store.setDisconnectedByUs(id, true)
         store.save()
     }
 
     public func connect(_ id: CGDirectDisplayID) throws {
         refresh()
-        if Self.isAirPlay(id) { throw DisplayError.airPlayDisplay }
-        try setEnabled(id, true)
+        if system.isAirPlay(id) { throw DisplayError.airPlayDisplay }
+        try system.setEnabled(id, true)
         store.setDisconnectedByUs(id, false)
         store.save()
     }
 
     public func detectDisplays() {
-        _ = PrivateAPI.detectDisplays?()
+        system.detectDisplays()
     }
 
     // MARK: - Sidecar actions (asynchronous, completion on main queue)
@@ -232,7 +177,7 @@ public final class DisplayManager {
         var failures: [String: Error] = [:]
         for known in store.displays.values where known.disconnectedByUs {
             do {
-                try setEnabled(known.id, true)
+                try system.setEnabled(known.id, true)
                 store.setDisconnectedByUs(known.id, false)
             } catch {
                 failures[known.name] = error
@@ -255,10 +200,10 @@ public final class DisplayManager {
     /// Disconnect every display except the main one (the one with the menu bar),
     /// including Sidecar devices.
     public func disconnectAllButMain(allowBuiltin: Bool = false, completion: @escaping ([String: Error]) -> Void) {
-        let main = CGMainDisplayID()
+        let main = system.mainDisplayID()
         var failures: [String: Error] = [:]
-        for id in Self.physicalActiveDisplayIDs() where id != main {
-            if CGDisplayIsBuiltin(id) != 0 && !allowBuiltin { continue }
+        for id in physicalActiveDisplayIDs() where id != main {
+            if system.isBuiltin(id) && !allowBuiltin { continue }
             do { try disconnect(id, allowBuiltin: allowBuiltin) } catch {
                 failures[store.displays[id]?.name ?? "\(id)"] = error
             }

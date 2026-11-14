@@ -1,5 +1,7 @@
 # DisplaySwitch
 
+[![CI](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml/badge.svg)](https://github.com/AlexandreBeauduin/DisplaySwitch/actions/workflows/ci.yml)
+
 [English](README.md) · **Français**
 
 Petite app de barre des menus macOS (et outil en ligne de commande) pour connecter /
@@ -22,11 +24,15 @@ déconnecter des écrans — **y compris un iPad utilisé en Sidecar** — sans 
 
 ## Installation
 
+**Téléchargement :** récupère `DisplaySwitch-x.y.z.zip` sur la page
+[Releases](https://github.com/AlexandreBeauduin/DisplaySwitch/releases), décompresse, place
+`DisplaySwitch.app` dans `/Applications`. Binaire universel (Apple Silicon + Intel), macOS 14+.
+
+**Depuis les sources** (Xcode 16 ou plus récent) :
+
 ```bash
 scripts/build-app.sh --install   # compile et copie DisplaySwitch.app dans /Applications
 ```
-
-Nécessite macOS 14 (Sonoma) ou plus récent et les outils en ligne de commande Xcode.
 
 Une copie téléchargée n'est pas signée avec un Developer ID : macOS la bloque au premier
 lancement → Réglages Système › Confidentialité et sécurité › **Ouvrir quand même**.
@@ -56,12 +62,26 @@ build/displayctl debug
 Détails : [Fonctionnement](docs/fr/FONCTIONNEMENT.md) · [Sidecar](docs/fr/SIDECAR.md) ·
 [Architecture](docs/fr/ARCHITECTURE.md)
 
+## Développement
+
+```bash
+swift test                 # tests unitaires (garde-fous, état, persistance) — aucun vrai écran touché
+swift build                # build debug
+scripts/release.sh         # build universel + build/DisplaySwitch-<version>.zip
+```
+
+Publier une version : incrémenter `CFBundleShortVersionString` dans `Resources/Info.plist`,
+ajouter une section à [CHANGELOG.md](CHANGELOG.md), puis pousser le tag correspondant
+(`git tag v1.2.0 && git push origin v1.2.0`) : GitHub Actions teste, compile et publie la release.
+
 ## Limites
 
 - Repose sur des **API privées d'Apple** : une mise à jour de macOS peut casser une
   fonction ; l'app affiche alors une erreur au lieu de planter. Pas d'App Store possible.
 - En dernier recours si un écran reste éteint : débrancher / rebrancher, ou redémarrer.
 
-## Licence
+## Licence et avertissement
 
-MIT — voir [LICENSE](LICENSE).
+MIT — voir [LICENSE](LICENSE). Fourni **tel quel, sans aucune garantie**. Ce projet n'est ni
+affilié à Apple ni approuvé par Apple. Il modifie la configuration de tes écrans via des API
+non documentées : à utiliser à tes risques.

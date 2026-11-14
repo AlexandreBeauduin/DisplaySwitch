@@ -25,7 +25,7 @@ public struct KnownSidecar: Codable, Equatable, Sendable {
 public final class DisplayStore {
     public private(set) var displays: [CGDirectDisplayID: KnownDisplay] = [:]
     public private(set) var sidecars: [String: KnownSidecar] = [:]
-    private let url: URL
+    public let url: URL
 
     private struct FileFormat: Codable {
         var displays: [KnownDisplay]

@@ -1,0 +1,47 @@
+name: Bug report / Signaler un bug
+description: Something does not work / Quelque chose ne marche pas
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        DisplaySwitch relies on private macOS APIs: the details below are essential.
+        DisplaySwitch repose sur des API privées de macOS : les détails ci-dessous sont indispensables.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened? / Que s'est-il passé ?
+      description: Steps, expected vs actual / Étapes, attendu vs obtenu
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version
+      placeholder: "27.2"
+    validations:
+      required: true
+  - type: dropdown
+    id: mac
+    attributes:
+      label: Mac
+      options: [Apple Silicon, Intel]
+    validations:
+      required: true
+  - type: textarea
+    id: displays
+    attributes:
+      label: Displays / Écrans
+      description: Models and connections (HDMI, USB-C, DisplayLink, Sidecar…) / Modèles et branchements
+    validations:
+      required: true
+  - type: textarea
+    id: debug
+    attributes:
+      label: Output of / Sortie de `displayctl list` and `displayctl debug`
+      render: text
+  - type: input
+    id: version
+    attributes:
+      label: DisplaySwitch version
+      placeholder: "1.0.0"
