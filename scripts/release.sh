@@ -18,5 +18,5 @@ cp -R build/DisplaySwitch.app build/displayctl README.md README.fr.md LICENSE "$
 ZIP=build/DisplaySwitch-${VERSION}.zip
 rm -f "$ZIP"
 ditto -c -k --norsrc --noextattr --noqtn --keepParent "$STAGE" "$ZIP"
-shasum -a 256 "$ZIP" | tee "$ZIP.sha256"
+(cd "$(dirname "$ZIP")" && shasum -a 256 "$(basename "$ZIP")") | tee "$ZIP.sha256"
 echo "OK: $ZIP"
